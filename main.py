@@ -1,5 +1,6 @@
 import mysql.connector
 import subprocess
+from matplotlib import pyplot as plt
 from RandomGenerators import *
 
 mysqlPath=r"C:\Program Files\MySQL\MySQL Server 8.0\bin\mysql.exe"
@@ -66,11 +67,9 @@ def add_random_data(table,count,database='clonedb',host='localhost',user='root',
             cursor.execute(f"SELECT COUNT(*) FROM {database}.buyer")
             buyerIdLimit= cursor.fetchone()[0]
             data=RandomPurchase(gameIdLimit,employeeIdLimit,buyerIdLimit)
-            print(data)
             add_data(table,data)
         if(table=="employee"):
             data=RandomEmployee()
-            print(data)
             add_data(table,data)
         if(table=="buyer"):
             cursor.execute(f"SELECT COUNT(*) FROM {database}.platform")
@@ -78,7 +77,6 @@ def add_random_data(table,count,database='clonedb',host='localhost',user='root',
             cursor.execute(f"SELECT COUNT(*) FROM {database}.genre")
             genreIdLimit = cursor.fetchone()[0]
             data=RandomBuyer(platformIdLimit,genreIdLimit)
-            print(data)
             add_data(table,data)
         if(table=="game"):
             cursor.execute(f"SELECT COUNT(*) FROM {database}.platform")
@@ -88,17 +86,34 @@ def add_random_data(table,count,database='clonedb',host='localhost',user='root',
             cursor.execute(f"SELECT COUNT(*) FROM {database}.developer")
             developerIdLimit = cursor.fetchone()[0]
             data=RandomGame(platformIdLimit,genreIdLimit,developerIdLimit)
-            print(data)
-            # add_data(table,data)
+            add_data(table,data)
         if(table=="platform"):
             data=RandomPlatform()
-            print(data)
             add_data(table,data)
 
+def delete_entry(table,index,database='clonedb',host='localhost',user='root',password='root'):
+    conn = mysql.connector.connect(host=host, user=user, password=password, database=database)
+    cursor = conn.cursor()
+    cursor.execute(f"DELETE FROM {table} WHERE id= {index}")
+    conn.commit()
+    cursor.close()
+    conn.close()
 
-
-
-
+def delete_all_entries(table,database='clonedb',host='localhost',user='root',password='root'):
+    conn = mysql.connector.connect(host=host, user=user, password=password, database=database)
+    cursor = conn.cursor()
+    cursor.execute(f"TRUNCATE TABLE {table}")
+    conn.commit()
+    cursor.close()
+    conn.close()
+def replace_all_entries(table,count,database='clonedb',host='localhost',user='root',password='root'):
+    conn = mysql.connector.connect(host=host, user=user, password=password, database=database)
+    cursor = conn.cursor()
+    cursor.execute(f"TRUNCATE TABLE {table}")
+    conn.commit()
+    add_random_data(table,count,database,host,user,password)
+    cursor.close()
+    conn.close()
 
 copy_database_with_foreign_keys('mydb','clonedb')
 
