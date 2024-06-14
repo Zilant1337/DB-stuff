@@ -7,8 +7,14 @@ from orm import *
 from orm_random import *
 import time
 
-session = Session()
-employee = orm_random.RandomBuyer(10,21)
-session.add(employee)
-session.commit()
-session.close()
+copy_database_with_foreign_keys('mydb','clonedb')
+
+db = Database(host='localhost', user='root', password='root', database='clonedb')
+db.connect()
+
+User.create_table(db)
+
+# Создаем нового пользователя и сохраняем его в базе данных
+new_employee = Employee.create(db, names='Bob', birth_date= '1990-02-23')
+
+db.disconnect()
