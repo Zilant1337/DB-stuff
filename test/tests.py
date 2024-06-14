@@ -21,8 +21,6 @@ mysqldumpPath = r"C:\Program Files\MySQL\MySQL Server 8.0\bin\mysqldump.exe"
 
 # Тесты
 def test_copy_database_with_foreign_keys():
-
-
     try:
         database.copy_database_with_foreign_keys(source_database, target_database)
         print("Тест copy_database_with_foreign_keys прошел успешно.")

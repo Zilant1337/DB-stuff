@@ -1,11 +1,16 @@
+import datetime
 import mysql.connector
 import subprocess
+import timeit
 from lib import RandomGenerators
+from sqlalchemy import create_engine, MetaData, Table, Column
+from sqlalchemy.dialects.mysql import *
+from sqlalchemy.ext.declarative import declarative_base
 
 mysqlPath = r"C:\Program Files\MySQL\MySQL Server 8.0\bin\mysql.exe"
 mysqldumpPath = r"C:\Program Files\MySQL\MySQL Server 8.0\bin\mysqldump.exe"
 
-
+Base = declarative_base()
 
 def copy_database_with_foreign_keys(source_database, target_database, host='localhost', user='root', password='root'):
     """
@@ -225,4 +230,115 @@ def replace_all_entries(table, count, database='clonedb', host='localhost', user
     finally:
         cursor.close()
         conn.close()
+def measure_generate_time(func, *args):
+    """
+    Измеряет время генерации данных.
 
+    Аргументы:
+        func: Функция, для которой мы вычисляем время выполнения
+        *args: Список аргументов для этой функции
+    """
+    setup = f"""from lib.database import {func.__name__}"""
+    stmt = f"""{func.__name__}(*{args})"""
+    time = timeit(stmt, setup=setup, number=1, globals=globals())
+    return time
+
+def generate_schema_for_table_creation(table_name, columns, metadata):
+    """
+    Аргументы:
+        table_name (str): Имя создаваемой таблицы.
+        columns (dict): Словарь, где ключами являются имена столбцов, а значениями - их типы в формате SQLAlchemy.
+    Возвращает:
+        table: Объект таблицы SQLAlchemy.
+    """
+    metadata1 = metadata
+    table = Table(
+        table_name,
+        metadata1,
+        *(Column(col_name, col_type) for col_name, col_type in columns.items())
+    )
+    return table
+
+def create_table(table_name, columns, database='clonedb', host='localhost', user='root', password='root'):
+    """
+    Создает новую таблицу в указанной базе данных MySQL.
+
+    Аргументы:
+
+        table_name (str): Имя создаваемой таблицы.
+        columns (dict): Словарь, где ключами являются имена столбцов, а значениями - их типы в формате SQLAlchemy.
+        database (str, optional): Имя базы данных. По умолчанию 'clonedb'.
+        host (str, optional): Хост сервера MySQL. По умолчанию 'localhost'.
+        user (str, optional): Пользователь MySQL. По умолчанию 'root'.
+        password (str, optional): Пароль MySQL. По умолчанию 'root'.
+    """
+    DATABASE_URL = f"mysql+mysqlconnector://{user}:{password}@{host}/{database}"
+    engine = create_engine(DATABASE_URL, echo=True)
+    metadata = MetaData(bind=engine)
+    table = generate_schema_for_table_creation(table_name, columns, metadata)
+    try:
+        print(f"Creating table {table_name}: ", end='')
+        table.create(engine)
+        print("OK")
+    except Exception as e:
+        print(f"Failed to create table: {e}")
+
+def backup_database(database, backup_path, host='localhost', user='root', password='root'):
+    """
+    Создает резервную копию указанной базы данных MySQL.
+
+    Аргументы:
+        database (str): Имя базы данных для резервного копирования.
+        backup_path (str): Директория, в которую будет сохранен файл резервной копии.
+        host (str, optional): Хост сервера MySQL. По умолчанию 'localhost'.
+        user (str, optional): Пользователь MySQL. По умолчанию 'root'.
+        password (str, optional): Пароль MySQL. По умолчанию 'root'.
+    """
+    global mysqldumpPath
+    timestamp = datetime.datetime.now().strftime('%Y%m%d%H%M%S')
+    backup_file = f"{backup_path}/{database}_backup_{timestamp}.sql"
+
+    dump_cmd = [
+        mysqldumpPath,
+        '--single-transaction',
+        '-h', host,
+        '-u', user,
+        f"-p{password}",
+        database,
+        '-r', backup_file
+    ]
+
+    try:
+        print(f"Creating backup for database '{database}'...")
+        subprocess.run(dump_cmd, check=True)
+        print(f"Backup created successfully at '{backup_file}'")
+    except subprocess.CalledProcessError as e:
+        print(f"Error during backup: {e}")
+def restore_database(database, backup_file, host='localhost', user='root', password='root'):
+    """
+    Восстанавливает указанную базу данных MySQL из резервной копии.
+
+    Аргументы:
+        database (str): Имя базы данных для восстановления.
+        backup_file (str): Путь к файлу резервной копии.
+        host (str, optional): Хост сервера MySQL. По умолчанию 'localhost'.
+        user (str, optional): Пользователь MySQL. По умолчанию 'root'.
+        password (str, optional): Пароль MySQL. По умолчанию 'root'.
+    """
+    global mysqlPath
+
+    restore_cmd = [
+        mysqlPath,
+        '-h', host,
+        '-u', user,
+        f"-p{password}",
+        database,
+        '-e', f"source {backup_file}"
+    ]
+
+    try:
+        print(f"Restoring database '{database}' from backup '{backup_file}'...")
+        subprocess.run(restore_cmd, check=True, shell=True)
+        print(f"Database '{database}' restored successfully.")
+    except subprocess.CalledProcessError as e:
+        print(f"Error during restore: {e}")
