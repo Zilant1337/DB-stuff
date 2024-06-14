@@ -4,11 +4,27 @@ from sqlalchemy.orm import relationship, sessionmaker
 
 Base = declarative_base()
 class Genre(Base):
+    """
+    Класс Genre представляет таблицу жанров видеоигр в базе данных.
+
+    Атрибуты:
+        id (int): Уникальный идентификатор жанра.
+        names (str): Название жанра.
+    """
     __tablename__ = 'genre'
     id = Column(Integer, primary_key=True)
     names = Column(String)
 
+
 class Developer(Base):
+    """
+    Класс Developer представляет таблицу разработчиков видеоигр в базе данных.
+
+    Атрибуты:
+        id (int): Уникальный идентификатор разработчика.
+        names (str): Название разработчика.
+        user_rating (float): Средний пользовательский рейтинг разработчика.
+    """
     __tablename__ = 'developer'
     id = Column(Integer, primary_key=True)
     names = Column(String)

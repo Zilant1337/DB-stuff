@@ -130,6 +130,13 @@ def add_random_data(table, count, database='clonedb', host='localhost', user='ro
         if table == "platform":
             data = RandomGenerators.RandomPlatform()
             add_data(table, data)
+        if table == "developer":
+            data = RandomGenerators.RandomDeveloper()
+            add_data(table, data)
+        if table == "genre":
+            data = RandomGenerators.RandomGenre()
+            add_data(table,data)
+
 
 
 def delete_entry(table, index, database='clonedb', host='localhost', user='root', password='root'):

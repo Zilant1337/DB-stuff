@@ -91,6 +91,12 @@ def add_random_data(session, model, count):
         elif model == models.Platform:
             data = orm_random.RandomPlatform()
             add_data(session, data)
+        elif model == models.Developer:
+            data = orm_random.RandomDeveloper()
+            add_data(session,data)
+        elif model == models.Genre:
+            data = orm_random.RandomGenre()
+            add_data(session,data)
 
 def delete_entry(session, model, entry_id):
     """

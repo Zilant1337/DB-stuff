@@ -18,6 +18,30 @@ ageRatings = [0, 3, 7, 12, 16, 18]
 languages = ["English", "Russian", "Japanese", "French", "German", "Spanish", "Finnish", "Swedish"]
 platform1 = ["Playstation", "Xbox", "Nintendo"]
 platform2 = ["2", "3", "4", "5", "6", "7", "8", "9", "10", "One", "Switch", "Wii", "Gamecube", "WiiU", "360"]
+dev1 = ["Quantum","Pixel","Infinite","Dynamic","Epic","Rogue","Stellar","Arcane","Mythic","Mystic","Titan","Lunar","Thunder","Cyber","Crystal","Nova","Fusion","Dream","Phoenix","Celestial"]
+dev2 = ["Forge","Studios","Games","Works","Labs","Creations","Haven","Realm","Ventures","Interactive","Craft","Engine","Arcade","Vision","Dimension","Nexus","Galaxy","Realm","Dynamics","Horizon"]
+gameGenres = [
+    "Action",
+    "Adventure",
+    "Role-Playing (RPG)",
+    "Simulation",
+    "Strategy",
+    "Shooter",
+    "Puzzle",
+    "Platformer",
+    "Fighting",
+    "Sports",
+    "Racing",
+    "Stealth",
+    "Survival",
+    "Horror",
+    "Music/Rhythm",
+    "Sandbox",
+    "Party",
+    "Visual Novel",
+    "Card Game",
+    "Tower Defense"
+]
 
 def RandomEmployee():
     """
@@ -113,4 +137,25 @@ def RandomPlatform():
     """
     return models.Platform(
         names=platform1[random.randint(0, len(platform1) - 1)] + " " + platform2[random.randint(0, len(platform2) - 1)]
+    )
+def RandomDeveloper():
+    """
+    Генерирует случайную запись о игровой платформе.
+
+    Возвращает:
+        Developer: Объект класса Developer с данными о разработчике.
+    """
+    return models.Developer(
+        names=dev1[random.randint(0, len(dev1) - 1)] + " " + dev2[random.randint(0, len(dev2) - 1)],
+        user_rating=random.randint(0,5)
+    )
+def RandomGenre():
+    """
+        Генерирует случайную запись о жанре.
+
+        Возвращает:
+            Genre: Объект класса Genre с данными о разработчике.
+    """
+    return models.Genre(
+        names=gameGenres[random.randint(0, len(gameGenres) - 1)] + " " + dev2[random.randint(0, len(gameGenres) - 1)]
     )
