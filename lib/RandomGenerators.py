@@ -55,7 +55,7 @@ def RandomPurchase(GameIdLimit, EmployeeIdLimit, BuyerIdLimit):
         dict: Словарь с данными о покупке.
     """
     return {
-        "dates": fake.date_between(start_date='-1y', end_date='now'),
+        "dates": string(fake.date_between(start_date='-1y', end_date='now')),
         "amount": random.randint(1, 5),
         "Game_id": random.randint(1, GameIdLimit),
         "Employee_id": random.randint(1, EmployeeIdLimit),
@@ -75,7 +75,7 @@ def RandomEmployee():
 
     return {
         "names": names[random.randint(0, len(names) - 1)],
-        "birth_date": fake.date_between(start_date=birthDateMin, end_date='-18y')
+        "birth_date": str(fake.date_between(start_date=birthDateMin, end_date='-18y'))
     }
 
 def RandomBuyer(PlatformIdLimit, GenreIdLimit):
@@ -99,7 +99,7 @@ def RandomBuyer(PlatformIdLimit, GenreIdLimit):
     return {
         "names": names[random.randint(0, len(names) - 1)],
         "password": password,
-        "birth_date": fake.date_between(start_date=birthDateMin, end_date='-10y'),
+        "birth_date": str(fake.date_between(start_date=birthDateMin, end_date='-10y')),
         "Platform_id": random.randint(1, PlatformIdLimit),
         "Genre_id": random.randint(1, GenreIdLimit),
         "boughtgames": random.randint(0, 999)
@@ -123,7 +123,7 @@ def RandomGame(PlatformIdLimit, GenreIdLimit, DeveloperIdLimit):
         "price": prices[random.randint(0, len(prices) - 1)],
         "age_rating": ageRatings[random.randint(0, len(ageRatings) - 1)],
         "user_rating": random.randint(0, 5),
-        "release_date": fake.date_between(start_date='-30y', end_date='now'),
+        "release_date": str(fake.date_between(start_date='-30y', end_date='now')),
         "player_count": random.randint(1, 8),
         "language": languages[random.randint(0, len(languages) - 1)],
         "stock": random.randint(0, 100000),
