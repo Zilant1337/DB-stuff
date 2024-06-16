@@ -10,9 +10,12 @@ copy_database_with_foreign_keys('mydb','clonedb')
 db = Database(host='localhost', user='root', password='root', database='clonedb')
 db.connect()
 
-a= generate_random_objects(Game,1,db)
-new_game = Game.create(db,**a[0])
-print (a)
+a = Employee.create(db, names = "ГЛАВРЫБА", birth_date= "2003-01-23")
+print (a.id,a.names,a.birth_date)
+a.names = "GAVNO"
+a.save()
+
+print (a.id,a.names,a.birth_date)
 
 
 db.disconnect()

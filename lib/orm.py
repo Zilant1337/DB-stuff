@@ -1,5 +1,6 @@
 import mysql.connector
 import re
+from lib.database import *
 
 class Database:
     def __init__(self, host, user, password, database):
@@ -133,6 +134,9 @@ class Model:
 
     def save(self):
         """Сохраняет объект в базу данных."""
+        if(self.id is not None):
+            delete_entry(self.__class__.__name__.lower(),self.id,self.db.database,self.db.host,self.db.user,self.db.password)
+            self.id = None
         column_names = list(self.__dict__.keys())[1:]  # исключаем 'db'
         values_names = list(self.__dict__.values())[1:]  # исключаем 'db'
         for i in range(len(column_names)):
@@ -409,25 +413,3 @@ class Game(ModelBase):
     Platform_id = IntegerField(min_value=1, foreign_key=('platform', 'id'))
     Genre_id = IntegerField(min_value=1, foreign_key=('genre', 'id'))
     Developer_id = IntegerField(min_value=1, foreign_key=('developer', 'id'))
-
-class User(ModelBase):
-    """
-    Модель пользователя.
-
-    Поля:
-        names (CharField): Имя пользователя.
-        courses (ManyToManyField): Курсы пользователя.
-    """
-    names = CharField()
-    courses = ManyToManyField('course')
-
-class Course(ModelBase):
-    """
-    Модель курса.
-
-    Поля:
-        names (CharField): Название курса.
-        students (ManyToManyField): Студенты курса.
-    """
-    names = CharField()
-    students = ManyToManyField('user')

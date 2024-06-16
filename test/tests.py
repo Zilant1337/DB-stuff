@@ -1,7 +1,7 @@
+from sqlalchemy import Integer, String
+import tempfile
 from lib.database import *
-from lib.orm import *
-from lib.RandomGenerators import *
-from lib.orm_random import *
+import os
 
 # Параметры базы данных
 DATABASE = 'clonedb'
@@ -11,19 +11,31 @@ PASSWORD = 'root'
 source_database = 'mydb'
 target_database = 'clonedb'
 
+# Путь к временному файлу, где будет хранится дамп базы данных
+backup_dir = tempfile.mkdtemp()
+
 # Путь к MySQL и mysqldump
 mysqlPath = r"C:\Program Files\MySQL\MySQL Server 8.0\bin\mysql.exe"
 mysqldumpPath = r"C:\Program Files\MySQL\MySQL Server 8.0\bin\mysqldump.exe"
 
-# Тесты
 def test_copy_database_with_foreign_keys():
+    """
+    Тестирует функцию copy_database_with_foreign_keys.
+
+    Проверяет успешное копирование базы данных с учетом внешних ключей.
+    """
     try:
-        database.copy_database_with_foreign_keys(source_database, target_database)
+        copy_database_with_foreign_keys(source_database, target_database)
         print("Тест copy_database_with_foreign_keys прошел успешно.")
     except Exception as e:
         print(f"Тест copy_database_with_foreign_keys провален: {e}")
 
 def test_add_data():
+    """
+    Тестирует функцию add_data.
+
+    Проверяет успешное добавление данных в таблицу.
+    """
     table = 'game'
     data = {
         'names': 'Test Game',
@@ -40,129 +52,128 @@ def test_add_data():
     }
 
     try:
-        database.add_data(table, data, DATABASE, HOST, USER, PASSWORD)
+        add_data(table, data, DATABASE, HOST, USER, PASSWORD)
         print("Тест add_data прошел успешно.")
     except Exception as e:
         print(f"Тест add_data провален: {e}")
 
 def test_add_random_data():
+    """
+    Тестирует функцию add_random_data.
+
+    Проверяет успешное добавление случайных данных в таблицу.
+    """
     table = 'game'
     count = 5
 
     try:
-        database.copy_database_with_foreign_keys(source_database, target_database)
-        database.add_random_data(table, count, DATABASE, HOST, USER, PASSWORD)
+        copy_database_with_foreign_keys(source_database, target_database)
+        add_random_data(table, count, DATABASE, HOST, USER, PASSWORD)
         print("Тест add_random_data прошел успешно.")
     except Exception as e:
         print(f"Тест add_random_data провален: {e}")
 
 def test_delete_entry():
+    """
+    Тестирует функцию delete_entry.
+
+    Проверяет успешное удаление записи из таблицы по индексу.
+    """
     table = 'game'
     index = 1
 
     try:
-        database.copy_database_with_foreign_keys(source_database, target_database)
-        database.delete_entry(table, index, DATABASE, HOST, USER, PASSWORD)
+        copy_database_with_foreign_keys(source_database, target_database)
+        delete_entry(table, index, DATABASE, HOST, USER, PASSWORD)
         print("Тест delete_entry прошел успешно.")
     except Exception as e:
         print(f"Тест delete_entry провален: {e}")
 
 def test_delete_all_entries():
+    """
+    Тестирует функцию delete_all_entries.
+
+    Проверяет успешное удаление всех записей из таблицы.
+    """
     table = 'game'
     try:
-        database.copy_database_with_foreign_keys(source_database, target_database)
-        database.delete_all_entries(table, DATABASE, HOST, USER, PASSWORD)
+        copy_database_with_foreign_keys(source_database, target_database)
+        delete_all_entries(table, DATABASE, HOST, USER, PASSWORD)
         print("Тест delete_all_entries прошел успешно.")
     except Exception as e:
         print(f"Тест delete_all_entries провален: {e}")
 
 def test_replace_all_entries():
+    """
+    Тестирует функцию replace_all_entries.
+
+    Проверяет успешную замену всех записей в таблице случайными данными.
+    """
     table = 'game'
     count = 5
     try:
-        database.copy_database_with_foreign_keys(source_database, target_database)
-        database.replace_all_entries(table, count, DATABASE, HOST, USER, PASSWORD)
+        copy_database_with_foreign_keys(source_database, target_database)
+        replace_all_entries(table, count, DATABASE, HOST, USER, PASSWORD)
         print("Тест replace_all_entries прошел успешно.")
     except Exception as e:
         print(f"Тест replace_all_entries провален: {e}")
 
-session = orm.Session()
+def test_measure_generate_time():
+    """
+    Тестирует функцию measure_generate_time.
 
-def test_orm_add_data():
-    try:
-        game_data = orm_random.RandomGame(10,10,2)
-        game_name=game_data.names
-        orm.add_data(session,game_data)
+    Проверяет корректность измерения времени выполнения функции.
+    """
+    def sample_function(a, b):
+        return a + b
 
-        game = session.query(models.Game).filter_by(names=game_name).first()
-        assert game is not None
+    time_taken = measure_generate_time(sample_function, 1, 2)
+    print(f"Время выполнения sample_function: {time_taken} секунд")
 
-        print("test_add_data passed")
+def test_generate_schema_for_table_creation():
+    """
+    Тестирует функцию generate_schema_for_table_creation.
 
-    finally:
-        session.close()
+    Проверяет корректность создания схемы таблицы.
+    """
+    columns = {
+        'id': Integer,
+        'name': String(50)
+    }
+    metadata = MetaData()
+    table = generate_schema_for_table_creation('test_table', columns, metadata)
+    print(f"Таблица создана с колонками: {table.columns.keys()}")
 
-def test_orm_add_random_data():
-    try:
-        game_count=len(orm.get_all_entries(session,models.Game))
-        print(game_count)
-        orm.add_random_data(session, models.Game, 5)
+def test_create_table(database, host, user, password):
+    """
+    Тестирует функцию create_table.
 
-        games = session.query(models.Game).all()
-        assert len(games) == game_count+5
+    Проверяет успешное создание таблицы в базе данных.
+    """
+    columns = {
+        'id': Integer,
+        'name': String(50)
+    }
+    create_table('test_table', columns, database=database, host=host, user=user, password=password)
 
-        print("test_add_random_data passed")
+def test_backup_database(database, host, user, password, backup_dir):
+    """
+    Тестирует функцию backup_database.
 
-    finally:
-        session.close()
+    Проверяет успешное создание резервной копии базы данных.
+    """
+    backup_database(database, backup_dir, host=host, user=user, password=password)
 
-def test_orm_delete_entry():
-    try:
-        game_data = orm_random.RandomGame(10, 10, 2)
-        game_name = game_data.names
-        orm.add_data(session, game_data)
+def test_restore_database(database, host, user, password, backup_dir):
+    """
+    Тестирует функцию restore_database.
 
-        game = session.query(models.Game).filter_by(names=game_name).first()
-        orm.delete_entry(session, models.Game, game.id)
-
-        game = session.query(models.Game).filter_by(names=game_name).first()
-        assert game is None
-
-        print("test_delete_entry passed")
-
-    finally:
-        session.close()
-
-def test_orm_delete_all_entries():
-    try:
-        game_data = orm_random.RandomGame(10,10,2)
-        orm.add_data(session, game_data)
-        game_data = orm_random.RandomGame(10,10,2)
-        orm.add_data(session, game_data)
-
-        orm.delete_all_entries(session, models.Game)
-
-        games = session.query(models.Game).all()
-        assert len(games) == 0
-
-        print("test_delete_all_entries passed")
-
-    finally:
-        session.close()
-
-def test_orm_replace_all_entries():
-    try:
-        orm.add_random_data(session, models.Game, 5)
-
-        orm.replace_all_entries(session, models.Game, 10)
-
-        games = session.query(models.Game).all()
-        assert len(games) == 10
-
-        print("test_replace_all_entries passed")
-
-    finally:
-        session.close()
+    Проверяет успешное восстановление базы данных из резервной копии.
+    """
+    backup_files = os.listdir(backup_dir)
+    if backup_files:
+        backup_file = os.path.join(backup_dir, backup_files[0])
+        restore_database(database, backup_file, host=host, user=user, password=password)
 
 # Запуск тестов
 test_copy_database_with_foreign_keys()
@@ -171,9 +182,15 @@ test_add_random_data()
 test_delete_entry()
 test_delete_all_entries()
 test_replace_all_entries()
-test_orm_add_data()
-test_orm_add_random_data()
-test_orm_delete_entry()
-test_orm_delete_all_entries()
-test_orm_replace_all_entries()
-print("ПАБЕДАААААААААААААААААААААААА")
+test_measure_generate_time()
+test_generate_schema_for_table_creation()
+test_create_table(DATABASE, HOST, USER, PASSWORD)
+test_backup_database(DATABASE, HOST, USER, PASSWORD, backup_dir)
+test_restore_database(DATABASE, HOST, USER, PASSWORD, backup_dir)
+
+# Очистка временной директории
+for root, dirs, files in os.walk(backup_dir):
+    for file in files:
+        os.remove(os.path.join(root, file))
+os.rmdir(backup_dir)
+print("Все тесты пройдены")

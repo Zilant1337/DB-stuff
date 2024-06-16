@@ -142,9 +142,6 @@ def add_random_data(table, count, database='clonedb', host='localhost', user='ro
         if table == "genre":
             data = RandomGenerators.RandomGenre()
             add_data(table,data)
-
-
-
 def delete_entry(table, index, database='clonedb', host='localhost', user='root', password='root'):
     """
     Удаляет конкретную запись из указанной таблицы базы данных MySQL.
@@ -231,18 +228,20 @@ def replace_all_entries(table, count, database='clonedb', host='localhost', user
     finally:
         cursor.close()
         conn.close()
-def measure_generate_time(func, *args):
+def measure_func_time(func, *args):
     """
-    Измеряет время генерации данных.
+    Измеряет время выполнения заданной функции.
 
     Аргументы:
-        func: Функция, для которой мы вычисляем время выполнения
-        *args: Список аргументов для этой функции
+        func (callable): Функция для измерения времени.
+        *args: Аргументы для функции.
+
+    Возвращает:
+        float: Время выполнения функции в секундах.
     """
-    setup = f"""from lib.database import {func.__name__}"""
-    stmt = f"""{func.__name__}(*{args})"""
-    time = timeit(stmt, setup=setup, number=1, globals=globals())
-    return time
+    wrapped = lambda: func(*args)
+    time_taken = timeit.timeit(wrapped, number=1)
+    return time_taken
 
 def generate_schema_for_table_creation(table_name, columns, metadata):
     """
@@ -275,7 +274,7 @@ def create_table(table_name, columns, database='clonedb', host='localhost', user
     """
     DATABASE_URL = f"mysql+mysqlconnector://{user}:{password}@{host}/{database}"
     engine = create_engine(DATABASE_URL, echo=True)
-    metadata = MetaData(bind=engine)
+    metadata = MetaData()
     table = generate_schema_for_table_creation(table_name, columns, metadata)
     try:
         print(f"Creating table {table_name}: ", end='')
@@ -297,7 +296,7 @@ def backup_database(database, backup_path, host='localhost', user='root', passwo
     """
     global mysqldumpPath
     timestamp = datetime.datetime.now().strftime('%Y%m%d%H%M%S')
-    backup_file = f"{backup_path}/{database}_backup_{timestamp}.sql"
+    backup_file = f"{backup_path}\\{database}_backup_{timestamp}.sql"
 
     dump_cmd = [
         mysqldumpPath,
@@ -315,6 +314,8 @@ def backup_database(database, backup_path, host='localhost', user='root', passwo
         print(f"Backup created successfully at '{backup_file}'")
     except subprocess.CalledProcessError as e:
         print(f"Error during backup: {e}")
+
+
 def restore_database(database, backup_file, host='localhost', user='root', password='root'):
     """
     Восстанавливает указанную базу данных MySQL из резервной копии.
@@ -333,19 +334,19 @@ def restore_database(database, backup_file, host='localhost', user='root', passw
         '-h', host,
         '-u', user,
         f"-p{password}",
-        database,
-        '-e', f"source {backup_file}"
+        database
     ]
 
     try:
         print(f"Restoring database '{database}' from backup '{backup_file}'...")
-        subprocess.run(restore_cmd, check=True, shell=True)
+        with open(backup_file, 'rb') as f:
+            subprocess.run(restore_cmd, stdin=f, check=True)
         print(f"Database '{database}' restored successfully.")
     except subprocess.CalledProcessError as e:
         print(f"Error during restore: {e}")
 
 
-def plot_graph(x_data, y_data_list, labels, title, xlabel, ylabel, output_file, vector_format=False):
+def plot_graph(x_data, y_data_list, labels, title, xlabel, ylabel, output_file, vector_format=False, png_format = False):
     """
     Построение и сохранение графика.
 
@@ -374,11 +375,10 @@ def plot_graph(x_data, y_data_list, labels, title, xlabel, ylabel, output_file, 
     plt.xlabel(xlabel)
     plt.ylabel(ylabel)
     plt.legend()
-
+    plt.show()
     if vector_format:
         plt.savefig(output_file, format='svg')
-    else:
+    if png_format:
         plt.savefig(output_file, format='png')
-    plt.show()
 
     plt.close()

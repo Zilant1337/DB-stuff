@@ -55,7 +55,7 @@ def RandomPurchase(GameIdLimit, EmployeeIdLimit, BuyerIdLimit):
         dict: Словарь с данными о покупке.
     """
     return {
-        "dates": string(fake.date_between(start_date='-1y', end_date='now')),
+        "dates": str(fake.date_between(start_date='-1y', end_date='now')),
         "amount": random.randint(1, 5),
         "Game_id": random.randint(1, GameIdLimit),
         "Employee_id": random.randint(1, EmployeeIdLimit),
