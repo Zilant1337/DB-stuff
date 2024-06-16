@@ -38,7 +38,30 @@ def do_generation_graphs(classes, db, file_name, max_rows=1000, step=100):
     )
 
 
+def do_insert_query_graphs(classes,db, file_name,max_rows=100,step = 10):
+    row_counts = list(range(step, max_rows + 1, step))
+    results = {cls.__name__ : [] for cls in classes}
+    for cls in classes:
+        for row_count in row_counts:
+            delete_all_entries(cls.__name__, db.database,db.host,db.user,db.password)
+            time_taken = measure_func_time(add_random_data,cls.__name__.lower(),row_count, db.database,db.host,db.user,db.password)
+            results[cls.__name__].append(time_taken)
+    labels = [cls.__name__ for cls in classes]
+    select_y_data_list = [results[cls.__name__] for cls in classes]
+    plot_graph(
+        x_data=row_counts,
+        y_data_list=select_y_data_list,
+        labels=labels,
+        title='Время выполнения разных INSERT запросов',
+        xlabel='Количество строк',
+        ylabel='Время (секунды)',
+        output_file=file_name,
+        vector_format=True,
+        png_format=True
+    )
 
+def do_select_query_graphs(cls,db,file_name,max_rows=100,step = 10):
+    row_counts = list(range(step, max_rows + 1, step))
 
 
 copy_database_with_foreign_keys('mydb', 'clonedb')
@@ -46,7 +69,10 @@ copy_database_with_foreign_keys('mydb', 'clonedb')
 db = Database(host='localhost', user='root', password='root', database='clonedb')
 db.connect()
 
-classes= Employee, Developer, Platform, Genre,
+# classes= Employee, Developer, Platform, Genre,
 big_classes = Purchase, Game, Buyer
-do_generation_graphs(classes,db, 'smol')
-do_generation_graphs(big_classes,db, 'big')
+# do_generation_graphs(classes,db, 'smol')
+# do_generation_graphs(big_classes,db, 'big')
+do_insert_query_graphs(big_classes,db,"INSERTMEMESY")
+
+

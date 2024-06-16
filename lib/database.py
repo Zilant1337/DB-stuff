@@ -344,8 +344,6 @@ def restore_database(database, backup_file, host='localhost', user='root', passw
         print(f"Database '{database}' restored successfully.")
     except subprocess.CalledProcessError as e:
         print(f"Error during restore: {e}")
-
-
 def plot_graph(x_data, y_data_list, labels, title, xlabel, ylabel, output_file, vector_format=False, png_format = False):
     """
     Построение и сохранение графика.
@@ -375,10 +373,9 @@ def plot_graph(x_data, y_data_list, labels, title, xlabel, ylabel, output_file, 
     plt.xlabel(xlabel)
     plt.ylabel(ylabel)
     plt.legend()
-    plt.show()
     if vector_format:
         plt.savefig(output_file, format='svg')
     if png_format:
         plt.savefig(output_file, format='png')
-
+    plt.show()
     plt.close()

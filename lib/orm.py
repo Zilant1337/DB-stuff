@@ -50,6 +50,9 @@ class Database:
         self.cursor.execute("SHOW TABLES")
         tables = [table[0] for table in self.cursor.fetchall()]
         return tables
+    def execute(self, query):
+        self.cursor.execute(query)
+
 
 class Field:
     def __init__(self, field_type, varchar_length=255, primary_key=False, foreign_key=None, min_value=None, max_value=None):
