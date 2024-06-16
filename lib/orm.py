@@ -51,7 +51,7 @@ class Database:
         return tables
 
 class Field:
-    def __init__(self, field_type, varchar_length=255, primary_key=False, foreign_key=None, min_value=None, max_value=None, words_count=None):
+    def __init__(self, field_type, varchar_length=255, primary_key=False, foreign_key=None, min_value=None, max_value=None):
         """
         Базовый класс для описания полей в модели.
 
@@ -62,14 +62,12 @@ class Field:
             foreign_key (tuple, optional): Если поле внешний ключ, то кортеж ('связанная_таблица', 'связанное_поле').
             min_value (int/float, optional): Минимальное значение для числового поля.
             max_value (int/float, optional): Максимальное значение для числового поля.
-            words_count (int, optional): Количество слов для генерации случайной строки (для ManyToManyField). По умолчанию None.
         """
         self.field_type = field_type
         self.primary_key = primary_key
         self.foreign_key = foreign_key
         self.min_value = min_value
         self.max_value = max_value
-        self.words_count = words_count
         self.varchar_length = varchar_length
 
 class IntegerField(Field):

@@ -2,9 +2,10 @@ import datetime
 import mysql.connector
 import subprocess
 import timeit
+import itertools
+import matplotlib.pyplot as plt
 from lib import RandomGenerators
 from sqlalchemy import create_engine, MetaData, Table, Column
-from sqlalchemy.dialects.mysql import *
 from sqlalchemy.ext.declarative import declarative_base
 
 mysqlPath = r"C:\Program Files\MySQL\MySQL Server 8.0\bin\mysql.exe"
@@ -342,3 +343,42 @@ def restore_database(database, backup_file, host='localhost', user='root', passw
         print(f"Database '{database}' restored successfully.")
     except subprocess.CalledProcessError as e:
         print(f"Error during restore: {e}")
+
+
+def plot_graph(x_data, y_data_list, labels, title, xlabel, ylabel, output_file, vector_format=False):
+    """
+    Построение и сохранение графика.
+
+    Параметры:
+        x_data (list): Данные для оси X.
+        y_data_list (list of lists): Список рядов данных для оси Y.
+        labels (list): Список меток для каждого ряда данных.
+        title (str): Название графика.
+        xlabel (str): Подпись оси X.
+        ylabel (str): Подпись оси Y.
+        output_file (str): Имя файла для сохранения графика.
+        vector_format (bool): Сохранить как векторное изображение, если True. В противном случае сохранить как растровое изображение.
+    """
+    colors = itertools.cycle(['b', 'g', 'r', 'c', 'm', 'y', 'k'])
+    linestyles = itertools.cycle(['-', '--', '-.', ':'])
+    markers = itertools.cycle(['o', 's', '^', 'D', 'v', '<', '>', 'p', '*'])
+
+    plt.figure()
+    for y_data, label in zip(y_data_list, labels):
+        color = next(colors)
+        linestyle = next(linestyles)
+        marker = next(markers) if len(x_data) < 10 else ''
+        plt.plot(x_data, y_data, color=color, linestyle=linestyle, marker=marker, label=label)
+
+    plt.title(title)
+    plt.xlabel(xlabel)
+    plt.ylabel(ylabel)
+    plt.legend()
+
+    if vector_format:
+        plt.savefig(output_file, format='svg')
+    else:
+        plt.savefig(output_file, format='png')
+    plt.show()
+
+    plt.close()

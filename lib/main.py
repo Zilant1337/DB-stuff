@@ -1,5 +1,3 @@
-from matplotlib import pyplot as plt
-
 import orm_random
 from RandomGenerators import *
 from database import *

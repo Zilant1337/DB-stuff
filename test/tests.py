@@ -1,11 +1,7 @@
-import sys
-import os
-
+from lib.database import *
+from lib.orm import *
 from lib.RandomGenerators import *
-from lib import database
-from lib import orm
-from lib import models
-from lib import orm_random
+from lib.orm_random import *
 
 # Параметры базы данных
 DATABASE = 'clonedb'

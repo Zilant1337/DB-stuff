@@ -1,7 +1,7 @@
 import random
 import string
 from faker import Faker
-from datetime import datetime, timedelta
+from datetime import datetime
 
 """Создание объекта Faker для генерации случайных данных"""
 fake = Faker()
