@@ -8,6 +8,68 @@ from lib import RandomGenerators
 from sqlalchemy import create_engine, MetaData, Table, Column
 from sqlalchemy.ext.declarative import declarative_base
 
+"""
+Модуль для работы с базами данных MySQL и генерации графиков.
+
+Содержит функции для выполнения различных операций с базами данных MySQL, таких как копирование базы данных, добавление данных, выполнение произвольных SQL-запросов и создание резервных копий. Также включает функции для построения и сохранения графиков.
+
+Переменные:
+    mysqlPath (str): Путь к исполняемому файлу MySQL.
+    mysqldumpPath (str): Путь к исполняемому файлу mysqldump.
+
+Функции:
+    copy_database_with_foreign_keys(source_database, target_database, host, user, password):
+        Копирует базу данных MySQL вместе с ее внешними ключами.
+
+    add_data(table, data, database, host, user, password):
+        Добавляет запись в указанную таблицу базы данных MySQL.
+
+    add_random_data(table, count, database, host, user, password):
+        Добавляет несколько случайных записей в указанную таблицу базы данных MySQL.
+
+    get_all_entries(table, database, host, user, password):
+        Возвращает список всех записей из заданной таблицы базы данных MySQL.
+
+    get_entry(table, entry_id, database, host, user, password):
+        Возвращает запись по заданному ID из таблицы базы данных MySQL.
+
+    delete_entry(table, index, database, host, user, password):
+        Удаляет конкретную запись из указанной таблицы базы данных MySQL.
+
+    delete_entry_with_condition(table, condition, database, host, user, password):
+        Удаляет запись из указанной таблицы базы данных MySQL, соответствующую условию.
+
+    delete_all_entries(table, database, host, user, password):
+        Удаляет все записи из указанной таблицы базы данных MySQL.
+
+    replace_all_entries(table, count, database, host, user, password):
+        Заменяет все записи в указанной таблице новыми случайными данными.
+
+    execute_query(query, database, host, user, password):
+        Выполняет произвольный SQL-запрос.
+
+    measure_func_time(func, *args):
+        Измеряет время выполнения заданной функции.
+
+    generate_schema_for_table_creation(table_name, columns, metadata):
+        Генерирует схему для создания таблицы в базе данных MySQL.
+
+    create_table(table_name, columns, database, host, user, password):
+        Создает новую таблицу в указанной базе данных MySQL.
+
+    backup_database(database, backup_path, host, user, password):
+        Создает резервную копию указанной базы данных MySQL.
+
+    restore_database(database, backup_file, host, user, password):
+        Восстанавливает указанную базу данных MySQL из резервной копии.
+
+    plot_multi_graph(x_data, y_data_list, labels, title, xlabel, ylabel, output_file, vector_format, png_format):
+        Строит и сохраняет многолинейный график.
+
+    plot_graph(x_data, y_data_list, labels, title, xlabel, ylabel, output_file, vector_format, png_format):
+        Строит и сохраняет график.
+"""
+
 mysqlPath = r"C:\Program Files\MySQL\MySQL Server 8.0\bin\mysql.exe"
 mysqldumpPath = r"C:\Program Files\MySQL\MySQL Server 8.0\bin\mysqldump.exe"
 
@@ -436,6 +498,45 @@ def restore_database(database, backup_file, host='localhost', user='root', passw
         print(f"База данных '{database}' успешно восстановлена.")
     except subprocess.CalledProcessError as e:
         print(f"Ошибка: {e}")
+def plot_multi_graph(x_data, y_data_list, labels, title, xlabel, ylabel, output_file, vector_format=False, png_format = False):
+    """
+    Построение и сохранение графика.
+
+    Параметры:
+        x_data (list): Данные для оси X.
+        y_data_list (list of lists): Список рядов данных для оси Y.
+        labels (list): Список меток для каждого ряда данных.
+        title (str): Название графика.
+        xlabel (str): Подпись оси X.
+        ylabel (str): Подпись оси Y.
+        output_file (str): Имя файла для сохранения графика.
+        vector_format (bool): Сохранить как векторное изображение, если True. В противном случае сохранить как растровое изображение.
+    """
+    colors = itertools.cycle(['b', 'g', 'r', 'c', 'm', 'y', 'k'])
+    linestyles = itertools.cycle(['-', '--', '-.', ':'])
+    markers = itertools.cycle(['o', 's', '^', 'D', 'v', '<', '>', 'p', '*'])
+
+    plt.figure()
+
+
+    for y_data, label in zip(y_data_list, labels):
+        print(y_data)
+        color = next(colors)
+        linestyle = next(linestyles)
+        marker = next(markers) if len(x_data) < 10 else ''
+        plt.plot(x_data, y_data, color=color, linestyle=linestyle, marker=marker, label=label)
+
+    plt.title(title)
+    plt.xlabel(xlabel)
+    plt.ylabel(ylabel)
+    plt.legend()
+    if vector_format:
+        plt.savefig(f"{output_file}.svg", format='svg')
+    if png_format:
+        plt.savefig(f"{output_file}.png", format='png')
+    plt.show()
+    plt.close()
+
 def plot_graph(x_data, y_data_list, labels, title, xlabel, ylabel, output_file, vector_format=False, png_format = False):
     """
     Построение и сохранение графика.
@@ -455,11 +556,11 @@ def plot_graph(x_data, y_data_list, labels, title, xlabel, ylabel, output_file, 
     markers = itertools.cycle(['o', 's', '^', 'D', 'v', '<', '>', 'p', '*'])
 
     plt.figure()
-    for y_data, label in zip(y_data_list, labels):
-        color = next(colors)
-        linestyle = next(linestyles)
-        marker = next(markers) if len(x_data) < 10 else ''
-        plt.plot(x_data, y_data, color=color, linestyle=linestyle, marker=marker, label=label)
+
+    color = next(colors)
+    linestyle = next(linestyles)
+    marker = next(markers) if len(x_data) < 10 else ''
+    plt.plot(x_data, y_data_list, color=color, linestyle=linestyle, marker=marker, label=labels)
 
     plt.title(title)
     plt.xlabel(xlabel)

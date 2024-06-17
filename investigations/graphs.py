@@ -4,6 +4,30 @@ from lib.database import *
 from lib.orm import *
 from lib.RandomGenerators import *
 from lib.orm_random import *
+import numpy as np
+
+"""
+Модуль для измерения времени выполнения различных операций базы данных и построения графиков.
+
+Этот модуль содержит функции для измерения времени выполнения различных запросов к базе данных, таких как вставка данных, выборка данных, удаление данных, а также для построения графиков зависимости времени выполнения от количества строк.
+
+Функции:
+- do_generation_graphs: Измеряет время генерации данных и строит графики.
+- do_insert_query_graphs: Измеряет время выполнения INSERT запросов и строит графики.
+- do_select_query_graphs: Измеряет время выполнения SELECT запросов и строит графики.
+- do_delete_query_graphs: Измеряет время выполнения DELETE запросов и строит графики.
+
+Аргументы:
+    - classes (list): Список классов для генерации данных или выполнения запросов.
+    - db (Database): Объект базы данных для подключения.
+    - file_name (str): Имя файла для сохранения графика.
+    - max_rows (int): Максимальное количество строк для операций.
+    - step (int): Шаг изменения количества строк.
+    - select_queries (list): Список SELECT запросов для выполнения (для do_select_query_graphs).
+    - cls (Class): Класс для операции над записями (для do_select_query_graphs и do_delete_query_graphs).
+    - condition (str): Условие для выполнения DELETE запроса (для do_delete_query_graphs).
+"""
+
 
 def do_generation_graphs(classes, db, file_name, max_rows=1000, step=100):
     """
@@ -23,10 +47,22 @@ def do_generation_graphs(classes, db, file_name, max_rows=1000, step=100):
         for row_count in row_counts:
             time_taken = measure_func_time(generate_random_objects, cls, row_count, db)
             results[cls.__name__].append(time_taken)
+
+        plot_graph(
+            x_data=row_counts,
+            y_data_list=results[cls.__name__],
+            labels=cls.__name__,
+            title=f'Время генерации данных в зависимости от количества строк в классе {cls.__name__}',
+            xlabel='Количество строк',
+            ylabel='Время (секунды)',
+            output_file=f"{file_name} {cls.__name__}",
+            vector_format=True,
+            png_format=True
+        )
     labels = [cls.__name__ for cls in classes]
     y_data_list = [results[cls_name] for cls_name in labels]
 
-    plot_graph(
+    plot_multi_graph(
         x_data=row_counts,
         y_data_list=y_data_list,
         labels=labels,
@@ -57,11 +93,23 @@ def do_insert_query_graphs(classes, db, file_name, max_rows=100, step=10):
             db.delete_all_entries(cls)
             time_taken = measure_func_time(db.add_random_data, cls, row_count)
             results[cls.__name__].append(time_taken)
+        plot_graph(
+            x_data=row_counts,
+            y_data_list=results[cls.__name__],
+            labels=cls.__name__,
+            title=f'Время выполнения разных INSERT запросов в классе {cls.__name__}',
+            xlabel='Количество строк',
+            ylabel='Время (секунды)',
+            output_file=f"{file_name} {cls.__name__}",
+            vector_format=True,
+            png_format=True
+        )
     labels = [cls.__name__ for cls in classes]
-    select_y_data_list = [results[cls.__name__] for cls in classes]
-    plot_graph(
+    y_data_list = [results[cls_name] for cls_name in labels]
+
+    plot_multi_graph(
         x_data=row_counts,
-        y_data_list=select_y_data_list,
+        y_data_list=y_data_list,
         labels=labels,
         title='Время выполнения разных INSERT запросов',
         xlabel='Количество строк',
@@ -86,14 +134,27 @@ def do_select_query_graphs(db, cls, select_queries, file_name, max_rows=1000, st
     """
     row_counts = list(range(step, max_rows + 1, step))
     results = {query: [] for query in select_queries}
+    cnt = 0
     for query in select_queries:
+        cnt+=1
         for row_count in row_counts:
             db.replace_all_entries(cls, row_count)
             time_taken = measure_func_time(db.execute_query, query)
             results[query].append(time_taken)
+        plot_graph(
+            x_data=row_counts,
+            y_data_list=results[query],
+            labels=query,
+            title=f'Время выполнения SELECT запроса {query}',
+            xlabel='Количество строк',
+            ylabel='Время (секунды)',
+            output_file=f"{file_name} {cnt}",
+            vector_format=True,
+            png_format=True
+        )
     labels = [query for query in select_queries]
     insert_y_data_list = [results[query] for query in labels]
-    plot_graph(
+    plot_multi_graph(
         x_data=row_counts,
         y_data_list=insert_y_data_list,
         labels=labels,
@@ -137,9 +198,20 @@ def do_delete_query_graphs(db, cls, condition, file_name, max_rows=1000, step=10
             elif function is delete_functions[2]:
                 time_taken = measure_func_time(function, cls, condition)
                 results[function.__name__].append(time_taken)
+        plot_graph(
+            x_data=row_counts,
+            y_data_list=results[function.__name__],
+            labels=function.__name__,
+            title=f'Время выполнения DELETE запроса {function.__name__}',
+            xlabel='Количество строк',
+            ylabel='Время (секунды)',
+            output_file=file_name,
+            vector_format=True,
+            png_format=True
+        )
     labels = [function.__name__ for function in delete_functions]
     delete_y_data_list = [results[function.__name__] for function in delete_functions]
-    plot_graph(
+    plot_multi_graph(
         x_data=row_counts,
         y_data_list=delete_y_data_list,
         labels=labels,
@@ -167,5 +239,13 @@ select_queries = [
 # do_generation_graphs(classes, db, 'smol')
 # do_generation_graphs(big_classes, db, 'big')
 # do_insert_query_graphs(big_classes, db, "INSERTMEMESY")
-# do_select_query_graphs(db, Game, select_queries, "SELECTMEMESY")
+do_select_query_graphs(db, Game, select_queries, "SELECTMEMESY")
 # do_delete_query_graphs(db, Game, "language = English", "DELETEMEMESY")
+
+"""
+Результаты исследований показали, что продолжительность генерации записей для баз данных напрямую зависит от количества генерируемых записей, а также количества столбцов в таблице, для которой генерируется запись
+
+Результаты исследований:
+- Графики, показывающие зависимость времени выполнения операций базы данных от количества строк.
+- Данные о производительности операций, которые могут быть использованы для оптимизации работы с базой данных.
+"""

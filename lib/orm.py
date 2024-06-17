@@ -2,6 +2,32 @@ import mysql.connector
 import re
 from lib.database import *
 
+"""
+Модуль для работы с базой данных MySQL и создания ORM моделей.
+
+Содержит классы для подключения и взаимодействия с базой данных, 
+а также определения моделей и полей.
+
+Классы:
+    Database: Класс для подключения к базе данных и выполнения различных операций.
+    Field: Базовый класс для определения полей моделей.
+    IntegerField: Класс для целочисленных полей.
+    FloatField: Класс для полей с плавающей точкой.
+    DateField: Класс для полей даты.
+    CharField: Класс для символьных полей.
+    ManyToManyField: Класс для полей многие ко многим.
+    Model: Базовый класс для моделей, включающий методы для сохранения и создания объектов.
+    ModelMeta: Метакласс для моделей, который обрабатывает поля и создает таблицы.
+    ModelBase: Базовый класс для всех моделей с метаклассом ModelMeta.
+    Employee: Модель работника.
+    Developer: Модель разработчика.
+    Buyer: Модель покупателя.
+    Platform: Модель игровой платформы.
+    Genre: Модель игрового жанра.
+    Purchase: Модель покупки.
+    Game: Модель игры.
+"""
+
 class Database:
     def __init__(self, host, user, password, database):
         """
@@ -359,7 +385,19 @@ class Model:
             print(f"Ошибка: {e}")
 
 class ModelMeta(type):
+
     def __new__(cls, name, bases, dct):
+        """
+            Метакласс для моделей, который обрабатывает поля моделей.
+
+            Аргументы:
+                name (str): Имя класса.
+                bases (tuple): Базовые классы.
+                dct (dict): Атрибуты класса.
+
+            Возвращает:
+                type: Созданный класс.
+        """
         fields = {}
         # Проверяем явно определенные поля в словаре класса
         for attr_name, attr_value in dct.items():
@@ -411,6 +449,13 @@ class ModelMeta(type):
 
 class ModelBase(Model, metaclass=ModelMeta):
     def __init__(self, db, **kwargs):
+        """
+            Базовый класс для всех моделей с метаклассом ModelMeta.
+
+            Аргументы:
+                db (Database): Объект базы данных.
+                **kwargs: Поля модели.
+        """
         super().__init__(db)
         for attr_name, attr_value in kwargs.items():
             setattr(self, attr_name, attr_value)
