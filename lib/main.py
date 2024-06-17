@@ -10,12 +10,10 @@ copy_database_with_foreign_keys('mydb','clonedb')
 db = Database(host='localhost', user='root', password='root', database='clonedb')
 db.connect()
 
-a = Employee.create(db, names = "ГЛАВРЫБА", birth_date= "2003-01-23")
-print (a.id,a.names,a.birth_date)
-a.names = "GAVNO"
-a.save()
+Purchase.create(db)
 
-print (a.id,a.names,a.birth_date)
+a= Purchase.create(db,dates = "2024-09-21",amount = "10", Game_id= "9", Employee_id = "1", Buyer_id = "1")
+a.save()
 
 
 db.disconnect()

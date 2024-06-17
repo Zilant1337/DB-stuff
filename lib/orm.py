@@ -7,7 +7,7 @@ class Database:
         """
         Класс для работы с базой данных MySQL.
 
-        Args:
+        Аргументы:
             host (str): Адрес хоста базы данных.
             user (str): Имя пользователя.
             password (str): Пароль пользователя.
@@ -30,36 +30,128 @@ class Database:
                 database=self.database
             )
             self.cursor = self.connection.cursor()
-            print("Connected to the database!")
+            print("Подключено к базе данных!")
         except mysql.connector.Error as e:
-            print(f"Error connecting to the database: {e}")
+            print(f"Ошибка: {e}")
 
     def disconnect(self):
         """Закрывает соединение с базой данных."""
         if self.connection:
             self.connection.close()
-            print("Disconnected from the database.")
+            print("Отключено от базы данных.")
 
     def get_tables(self):
         """
         Получает список таблиц в базе данных.
 
-        Returns:
+        Возвращает:
             list: Список имен таблиц.
         """
         self.cursor.execute("SHOW TABLES")
         tables = [table[0] for table in self.cursor.fetchall()]
         return tables
-    def execute(self, query):
-        self.cursor.execute(query)
 
+    def delete_all_entries(self, cls):
+        """
+        Удаляет все записи из таблицы.
+
+        Аргументы:
+            cls (class): Класс модели, записи которой необходимо удалить.
+        """
+        delete_all_entries(cls.__name__.lower(), self.database, self.host, self.user, self.password)
+
+    def add_random_data(self, cls, count):
+        """
+        Добавляет случайные данные в таблицу.
+
+        Аргументы:
+            cls (class): Класс модели, в таблицу которой нужно добавить данные.
+            count (int): Количество записей для добавления.
+        """
+        add_random_data(cls.__name__.lower(), count, self.database, self.host, self.user, self.password)
+
+    def delete_entry(self, cls, id):
+        """
+        Удаляет запись из таблицы по ID.
+
+        Аргументы:
+            cls (class): Класс модели, из таблицы которой нужно удалить запись.
+            id (int): ID записи для удаления.
+        """
+        delete_entry(cls.__name__.lower(), id, self.database, self.host, self.user, self.password)
+
+    def delete_entry_with_condition(self, cls, condition):
+        """
+        Удаляет записи из таблицы по условию.
+
+        Аргументы:
+            cls (class): Класс модели, из таблицы которой нужно удалить записи.
+            condition (str): Условие для удаления записей.
+        """
+        delete_entry_with_condition(cls.__name__.lower(), condition, self.database, self.host, self.user, self.password)
+
+    def replace_all_entries(self, cls, count):
+        """
+        Заменяет все записи в таблице случайными данными.
+
+        Аргументы:
+            cls (class): Класс модели, в таблице которой нужно заменить данные.
+            count (int): Количество записей для замены.
+        """
+        replace_all_entries(cls.__name__.lower(), count, self.database, self.host, self.user, self.password)
+
+    def execute_query(self, query):
+        """
+        Выполняет произвольный SQL-запрос.
+
+        Аргументы:
+            query (str): SQL-запрос для выполнения.
+        """
+        execute_query(query, self.database, self.host, self.user, self.password)
+
+    def get_all_entries(self, cls):
+        """
+        Получает все записи из таблицы.
+
+        Аргументы:
+            cls (class): Класс модели, записи которой необходимо получить.
+
+        Возвращает:
+            list: Список объектов модели.
+        """
+        entries = get_all_entries(cls.__name__.lower(), self.database, self.host, self.user, self.password)
+        entry_objects = []
+        for entry in entries:
+            print(entry)
+            object = cls.create(self, **entry)
+            object.id = entry["id"]
+            entry_objects.append(object)
+
+        return entry_objects
+
+    def get_entry(self, cls, id):
+        """
+        Получает запись из таблицы по ID.
+
+        Аргументы:
+            cls (class): Класс модели, запись которой необходимо получить.
+            id (int): ID записи для получения.
+
+        Возвращает:
+            object: Объект модели.
+        """
+        entry = get_entry(cls.__name__.lower(), id, self.database, self.host, self.user, self.password)
+        print(entry)
+        object = cls.create(self, **entry)
+        object.id = id
+        return object
 
 class Field:
     def __init__(self, field_type, varchar_length=255, primary_key=False, foreign_key=None, min_value=None, max_value=None):
         """
         Базовый класс для описания полей в модели.
 
-        Args:
+        Аргументы:
             field_type (str): Тип поля (например, 'INT', 'VARCHAR', 'DATE' и т. д.).
             varchar_length (int, optional): Длина VARCHAR поля. По умолчанию 255.
             primary_key (bool, optional): Является ли поле первичным ключом. По умолчанию False.
@@ -79,7 +171,7 @@ class IntegerField(Field):
         """
         Целочисленное поле.
 
-        Args:
+        Аргументы:
             **kwargs: Параметры поля (см. Field).
         """
         super().__init__('INT', **kwargs)
@@ -89,7 +181,7 @@ class FloatField(Field):
         """
         Поле с плавающей точкой.
 
-        Args:
+        Аргументы:
             **kwargs: Параметры поля (см. Field).
         """
         super().__init__(field_type='FLOAT', **kwargs)
@@ -99,7 +191,7 @@ class DateField(Field):
         """
         Поле даты.
 
-        Args:
+        Аргументы:
             **kwargs: Параметры поля (см. Field).
         """
         super().__init__(field_type='DATE', **kwargs)
@@ -109,7 +201,7 @@ class CharField(Field):
         """
         Символьное поле.
 
-        Args:
+        Аргументы:
             **kwargs: Параметры поля (см. Field).
         """
         super().__init__('VARCHAR', **kwargs)
@@ -119,7 +211,7 @@ class ManyToManyField(Field):
         """
         Многие ко многим отношение.
 
-        Args:
+        Аргументы:
             related_model (str): Имя связанной модели.
         """
         super().__init__(field_type='MANY_TO_MANY')
@@ -130,7 +222,7 @@ class Model:
         """
         Базовый класс для моделей.
 
-        Args:
+        Аргументы:
             db (Database): Объект базы данных.
         """
         self.db = db
@@ -162,13 +254,27 @@ class Model:
     @classmethod
     def create(cls, db, **kwargs):
         """
-        Создает новый объект модели и сохраняет его в базу данных.
+        Создает новый объект модели.
 
-        Args:
+        Аргументы:
             db (Database): Объект базы данных.
             **kwargs: Поля модели.
 
-        Returns:
+        Возвращает:
+            Model: Созданный объект модели.
+        """
+        instance = cls(db, **kwargs)
+        return instance
+    @classmethod
+    def create_and_save(cls, db, **kwargs):
+        """
+        Создает новый объект модели и сохраняет его в базу данных.
+
+        Аргументы:
+            db (Database): Объект базы данных.
+            **kwargs: Поля модели.
+
+        Возвращает:
             Model: Созданный объект модели.
         """
         instance = cls(db, **kwargs)
@@ -180,7 +286,7 @@ class Model:
         """
         Создает таблицу для модели в базе данных.
 
-        Args:
+        Аргументы:
             db (Database): Объект базы данных.
         """
         table_name = cls.__name__.lower()
@@ -209,9 +315,9 @@ class Model:
             try:
                 db.cursor.execute(table_query)
                 db.connection.commit()
-                print(f"{table_name} table created successfully!")
+                print(f"Таблица {table_name} успешно создана!")
             except mysql.connector.Error as e:
-                print(f"Error creating {table_name} table: {e}")
+                print(f"Ошибка: {e}")
 
         # Создание объединяющей таблицы для связи многие ко многим
         for field_name, field in cls._fields.items():
@@ -229,15 +335,15 @@ class Model:
                     try:
                         db.cursor.execute(join_table_query)
                         db.connection.commit()
-                        print(f"{join_table_name} join table created successfully!")
+                        print(f"{join_table_name} таблица соединения создана!")
                     except mysql.connector.Error as e:
-                        print(f"Error creating {join_table_name} join table: {e}")
+                        print(f"Ошибка: {e}")
 
     def add_related(self, related_obj):
         """
         Добавляет связанный объект.
 
-        Args:
+        Аргументы:
             related_obj (Model): Связанный объект.
         """
         table_name = self.__class__.__name__.lower()
@@ -248,9 +354,9 @@ class Model:
         try:
             self.db.cursor.execute(query)
             self.db.connection.commit()
-            print(f"Relation added between {table_name} and {related_table_name}")
+            print(f"Отношение многие ко многим {table_name} и {related_table_name} создано")
         except mysql.connector.Error as e:
-            print(f"Error adding relation: {e}")
+            print(f"Ошибка: {e}")
 
 class ModelMeta(type):
     def __new__(cls, name, bases, dct):

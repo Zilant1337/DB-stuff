@@ -142,6 +142,60 @@ def add_random_data(table, count, database='clonedb', host='localhost', user='ro
         if table == "genre":
             data = RandomGenerators.RandomGenre()
             add_data(table,data)
+def get_all_entries(table, database='clonedb', host='localhost', user='root', password='root'):
+    """
+    Возвращает список всех записей из заданной таблицы базы данных MySQL.
+
+    Аргументы:
+        table (str): Имя таблицы, из которой будут получены все записи.
+        database (str, optional): Имя базы данных. По умолчанию 'clonedb'.
+        host (str, optional): Имя хоста сервера MySQL. По умолчанию 'localhost'.
+        user (str, optional): Имя пользователя MySQL. По умолчанию 'root'.
+        password (str, optional): Пароль MySQL. По умолчанию 'root'.
+
+    Возвращает:
+        list: Список всех записей из таблицы.
+    """
+    conn = mysql.connector.connect(host=host, user=user, password=password, database=database)
+    cursor = conn.cursor(dictionary=True)
+    try:
+        cursor.execute(f"SELECT * FROM {table}")
+        entries = cursor.fetchall()
+        return entries
+    except mysql.connector.Error as err:
+        print(f"Ошибка: {err}")
+        return []
+    finally:
+        cursor.close()
+        conn.close()
+
+def get_entry(table, entry_id, database='clonedb', host='localhost', user='root', password='root'):
+    """
+    Возвращает запись по заданному ID из таблицы базы данных MySQL.
+
+    Аргументы:
+        table (str): Имя таблицы, из которой будет получена запись.
+        entry_id (int): ID записи, которую нужно получить.
+        database (str, optional): Имя базы данных. По умолчанию 'clonedb'.
+        host (str, optional): Имя хоста сервера MySQL. По умолчанию 'localhost'.
+        user (str, optional): Имя пользователя MySQL. По умолчанию 'root'.
+        password (str, optional): Пароль MySQL. По умолчанию 'root'.
+
+    Возвращает:
+        dict: Запись с заданным ID.
+    """
+    conn = mysql.connector.connect(host=host, user=user, password=password, database=database)
+    cursor = conn.cursor(dictionary=True)
+    try:
+        cursor.execute(f"SELECT * FROM {table} WHERE id = {entry_id}")
+        entry = cursor.fetchone()
+        return entry
+    except mysql.connector.Error as err:
+        print(f"Ошибка: {err}")
+        return None
+    finally:
+        cursor.close()
+        conn.close()
 def delete_entry(table, index, database='clonedb', host='localhost', user='root', password='root'):
     """
     Удаляет конкретную запись из указанной таблицы базы данных MySQL.
@@ -169,6 +223,18 @@ def delete_entry(table, index, database='clonedb', host='localhost', user='root'
         cursor.close()
         conn.close()
 
+def delete_entry_with_condition(table, condition, database='clonedb', host='localhost', user='root', password='root'):
+    conn = mysql.connector.connect(host=host, user=user, password=password, database=database)
+    cursor = conn.cursor()
+    try:
+        cursor.execute(f"DELETE FROM {table} WHERE {condition}")
+        conn.commit()
+        print(f"Запись успешно удалена")
+    except mysql.connector.Error as err:
+        print(f"Ошибка: {err}")
+    finally:
+        cursor.close()
+        conn.close()
 
 def delete_all_entries(table, database='clonedb', host='localhost', user='root', password='root'):
     """
@@ -187,7 +253,7 @@ def delete_all_entries(table, database='clonedb', host='localhost', user='root',
     conn = mysql.connector.connect(host=host, user=user, password=password, database=database)
     cursor = conn.cursor()
     try:
-        cursor.execute(f"TRUNCATE TABLE {table}")
+        cursor.execute(f"DELETE FROM {table}")
         conn.commit()
         print(f"Все записи в {database}.{table} успешно удалены")
     except mysql.connector.Error as err:
@@ -215,16 +281,42 @@ def replace_all_entries(table, count, database='clonedb', host='localhost', user
     conn = mysql.connector.connect(host=host, user=user, password=password, database=database)
     cursor = conn.cursor()
     try:
-        cursor.execute(f"TRUNCATE TABLE {table}")
+        cursor.execute(f"DELETE FROM {table}")
     except mysql.connector.Error as err:
-        print(f"Error:{err}\n Deleting purchase and trying again...")
-        cursor.execute(f"TRUNCATE TABLE purchase")
+        print(f"Ошибка:{err}\n Удаляем Purchase и пробуем снова...")
+        cursor.execute(f"DELETE FROM purchase")
     conn.commit()
     try:
         add_random_data(table, count, database, host, user, password)
-        print(f"Replaced all data in {database}.{table} with {count} random entries successfully")
+        print(f"Все данные в  {database}.{table} успешно заменены {count} случайными записями")
     except mysql.connector.Error as err:
-        print(f"Error:{err}")
+        print(f"Ошибка:{err}")
+    finally:
+        cursor.close()
+        conn.close()
+
+def execute_query(query,database='clonedb', host='localhost', user='root', password='root'):
+    """
+    Выполняет произвольный SQL-запрос.
+
+    Аргументы:
+        query (str): SQL-запрос для выполнения.
+        database (str, optional): Имя базы данных. По умолчанию 'clonedb'.
+        host (str, optional): Адрес хоста базы данных. По умолчанию 'localhost'.
+        user (str, optional): Имя пользователя базы данных. По умолчанию 'root'.
+        password (str, optional): Пароль пользователя базы данных. По умолчанию 'root'.
+
+    Возвращает:
+        list: Результаты запроса для SELECT-запросов, иначе None.
+    """
+    conn = mysql.connector.connect(host=host, user=user, password=password, database=database)
+    cursor = conn.cursor()
+    try:
+        cursor.execute(query)
+        if "SELECT" in query:
+            cursor.fetchall()
+    except mysql.connector.Error as err:
+        print(f"Ошибка:{err}")
     finally:
         cursor.close()
         conn.close()
@@ -277,11 +369,11 @@ def create_table(table_name, columns, database='clonedb', host='localhost', user
     metadata = MetaData()
     table = generate_schema_for_table_creation(table_name, columns, metadata)
     try:
-        print(f"Creating table {table_name}: ", end='')
+        print(f"Создаётся таблица {table_name}: ", end='')
         table.create(engine)
         print("OK")
     except Exception as e:
-        print(f"Failed to create table: {e}")
+        print(f"Ошибка: {e}")
 
 def backup_database(database, backup_path, host='localhost', user='root', password='root'):
     """
@@ -309,11 +401,11 @@ def backup_database(database, backup_path, host='localhost', user='root', passwo
     ]
 
     try:
-        print(f"Creating backup for database '{database}'...")
+        print(f"Создаётся бэкап базы данных '{database}'...")
         subprocess.run(dump_cmd, check=True)
-        print(f"Backup created successfully at '{backup_file}'")
+        print(f"Бэкап успешно создан. Путь к файлу: '{backup_file}'")
     except subprocess.CalledProcessError as e:
-        print(f"Error during backup: {e}")
+        print(f"Ошибка: {e}")
 
 
 def restore_database(database, backup_file, host='localhost', user='root', password='root'):
@@ -338,12 +430,12 @@ def restore_database(database, backup_file, host='localhost', user='root', passw
     ]
 
     try:
-        print(f"Restoring database '{database}' from backup '{backup_file}'...")
+        print(f"Восстанавливается база данных '{database}' из бэкапа '{backup_file}'...")
         with open(backup_file, 'rb') as f:
             subprocess.run(restore_cmd, stdin=f, check=True)
-        print(f"Database '{database}' restored successfully.")
+        print(f"База данных '{database}' успешно восстановлена.")
     except subprocess.CalledProcessError as e:
-        print(f"Error during restore: {e}")
+        print(f"Ошибка: {e}")
 def plot_graph(x_data, y_data_list, labels, title, xlabel, ylabel, output_file, vector_format=False, png_format = False):
     """
     Построение и сохранение графика.
@@ -374,8 +466,8 @@ def plot_graph(x_data, y_data_list, labels, title, xlabel, ylabel, output_file, 
     plt.ylabel(ylabel)
     plt.legend()
     if vector_format:
-        plt.savefig(output_file, format='svg')
+        plt.savefig(f"{output_file}.svg", format='svg')
     if png_format:
-        plt.savefig(output_file, format='png')
+        plt.savefig(f"{output_file}.png", format='png')
     plt.show()
     plt.close()

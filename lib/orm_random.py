@@ -49,5 +49,5 @@ def generate_random_objects(cls, n, db):
             obj_data = RandomGame(platformIdLimit, genreIdLimit, developerIdLimit)
         else:
             raise ValueError(f"Unsupported class: {cls}")
-        created_objects.append(obj_data)
+        created_objects.append(cls.create(db,**obj_data))
     return created_objects
